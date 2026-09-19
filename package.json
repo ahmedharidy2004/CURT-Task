@@ -1,0 +1,35 @@
+{
+  "name": "curt-task-management",
+  "version": "1.0.0",
+  "description": "",
+  "homepage": "https://github.com/ahmedharidy2004/curt-task-management#readme",
+  "bugs": {
+    "url": "https://github.com/ahmedharidy2004/curt-task-management/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ahmedharidy2004/curt-task-management.git"
+  },
+  "license": "ISC",
+  "author": "ahmed haridy",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "postinstall": "prisma skills sync || exit 0"
+  },
+  "dependencies": {
+    "@prisma/client": "^7.10.0",
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.1",
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/node": "^26.6.2",
+    "prisma": "^8.0.0-rc.15",
+    "tsx": "^4.23.13",
+    "typescript": "^5.9.3"
+  }
+}
