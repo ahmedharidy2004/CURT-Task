@@ -6,7 +6,6 @@ const router = express.Router();
 
 router.route("/")
         .get(userController.getAllUsers)
-        .post(createUserValidator, handleValidationErrors, userController.createUser);
 
 router.route("/:id")
         .get(userController.getUserById);

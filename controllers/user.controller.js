@@ -23,14 +23,3 @@ export const getUserById = catchAsync(async (req, res) => {
         }
     });
 })
-
-export const createUser = catchAsync(async (req, res) => {
-    const createdUser = await userService.createUser(req.body);
-
-    res.status(201).json({
-        status: "success",
-        data : {
-            createdUser
-        }
-    });
-})
