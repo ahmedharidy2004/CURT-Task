@@ -69,6 +69,9 @@ export const updateProject = async(projectId, body) => {
             throw new AppError("Project Not Found", 404);
         }
 
+        if(err.code == "P2003")
+            throw new AppError(`The owner with the id: ${body.ownerId} does not exist`, 404);
+
         throw err;
     }
 }
