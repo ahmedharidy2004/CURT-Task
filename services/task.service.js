@@ -65,14 +65,21 @@ const validateAssignedMember = async (project, assignedTo) => {
         throw new AppError("Assigned user is not a member of this project", 403);
 };
 
-export const getAllTasks = async (userId, page, limit) => {
+export const getAllTasks = async (userId, page, limit, filter = {}) => {
+
+    const taskWhere = {
+        project: projectAccessCondition(userId),
+        status: filter.status,
+        priority: filter.priority,
+        assignedTo: filter.assignedTo,
+        projectId: filter.projectId
+    }
+
     const skip = (page - 1) * limit;
 
     const [tasks, total] = await prisma.$transaction([
         prisma.task.findMany({
-            where: {
-                project: projectAccessCondition(userId)
-            },
+            where: taskWhere,
             skip,
             take: limit,
             orderBy: {
@@ -82,9 +89,7 @@ export const getAllTasks = async (userId, page, limit) => {
         }),
 
         prisma.task.count({
-            where: {
-                project: projectAccessCondition(userId)
-            }
+            where: taskWhere
         })
     ])
 

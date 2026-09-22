@@ -2,6 +2,7 @@ import * as projectController from "../controllers/project.controller.js";
 import express from "express";
 import { createProjectValidator,updateProjectValidator,handleValidationErrors } from "../middleware/Validators.js";
 import { protect } from "./../middleware/protect.js";
+import { restrictTo } from "../middleware/restrictTo.js";
 
 const router = express.Router();
 
@@ -13,7 +14,13 @@ router.route("/")
 
 router.route("/:id")
         .get(projectController.getProjectById)
-        .patch(updateProjectValidator, handleValidationErrors, projectController.updateProject)
-        .delete(projectController.deleteProject)
+        .patch(restrictTo("OWNER"), updateProjectValidator, handleValidationErrors, projectController.updateProject)
+        .delete(restrictTo("OWNER"), projectController.deleteProject)
+
+router.route("/:id/members")
+        .post(restrictTo("OWNER"), projectController.addProjectMember)
+
+router.route("/:id/members/:memberId")
+        .delete(restrictTo("OWNER"), projectController.removeProjectMember)
 
 export default router;

@@ -9,7 +9,9 @@ export const getAllTasks = catchAsync(async(req, res) => {
     if (page < 1 || limit < 1 || limit > 100)
         throw new AppError("Page must be positive & limit is between 1 and 100", 400);
 
-    const result = await taskService.getAllTasks(req.user.id, page, limit);
+    const { status, priority, assignedTo, projectId } = req.query;
+
+    const result = await taskService.getAllTasks(req.user.id, page, limit, { status, priority, assignedTo, projectId });
 
     res.status(200).json({
         status: "success",

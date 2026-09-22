@@ -26,11 +26,21 @@ const accessCondition = (userId) => ({
     ]
 });
 
-export const getAllProjects = async (userId, page, limit) => {
+export const getAllProjects = async (userId, page, limit, filter = {}) => {
     const skip = (page - 1) * limit;
+
+    const projectWhere = accessCondition(userId);
+
+    if (filter.name) {
+        projectWhere.name = {
+            contains: filter.name,
+            mode: "insensitive"
+        };
+    }
+
     const [projects, total] = await prisma.$transaction([
         prisma.project.findMany({
-            where: accessCondition(userId),
+            where: projectWhere,
             skip,
             take: limit,
             orderBy: {
@@ -40,7 +50,7 @@ export const getAllProjects = async (userId, page, limit) => {
         }),
 
         prisma.project.count({
-            where: accessCondition(userId)
+            where: projectWhere
         })
     ])
 
@@ -148,4 +158,106 @@ export const deleteProject = async(projectId, ownerId) => {
 
         throw err;
     }
+}
+
+export const addProjectMember = async (projectId, ownerId, memberId) => {
+    const project = await prisma.project.findUnique({
+        where: { id: projectId },
+        select: { ownerId: true }
+    });
+
+    if (!project) {
+        throw new AppError("No project found with that Id", 404);
+    }
+
+    if (project.ownerId !== ownerId) {
+        throw new AppError("You can't do this action", 403);
+    }
+
+    const member = await prisma.user.findUnique({
+        where: { id: memberId },
+        select: { id: true, name: true }
+    });
+
+    if (!member) {
+        throw new AppError("User not found", 404);
+    }
+
+    try {
+        const addedMember = await prisma.projectMember.create({
+            data: {
+                projectId,
+                userId: memberId
+            },
+            select: {
+                project: {
+                    select: {
+                        id: true,
+                        name: true
+                    }
+                },
+                user: {
+                    select: {
+                        id: true,
+                        name: true
+                    }
+                }
+            }
+        });
+
+        return addedMember;
+    } catch (err) {
+        if (err.code === "P2002") {
+            throw new AppError("User is already a member of this project", 409);
+        }
+
+        throw err;
+    }
+}
+
+export const removeProjectMember = async (projectId, ownerId, memberId) => {
+    const project = await prisma.project.findUnique({
+        where: { id: projectId },
+        select: { ownerId: true }
+    });
+
+    if (!project) {
+        throw new AppError("No project found with that Id", 404);
+    }
+
+    if (project.ownerId !== ownerId) {
+        throw new AppError("You can't do this action", 403);
+    }
+
+    if (memberId === project.ownerId) {
+        throw new AppError("Project owner cannot be removed from the project", 400);
+    }
+
+    const membership = await prisma.projectMember.findUnique({
+        where: {
+            projectId_userId: {
+                projectId,
+                userId: memberId
+            }
+        }
+    });
+
+    if (!membership) {
+        throw new AppError("User is not a member of this project", 404);
+    }
+
+    await prisma.projectMember.delete({
+        where: {
+            projectId_userId: {
+                projectId,
+                userId: memberId
+            }
+        }
+    });
+
+    return {
+        projectId,
+        userId: memberId,
+        removed: true
+    };
 }

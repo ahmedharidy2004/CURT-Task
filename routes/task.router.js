@@ -2,6 +2,7 @@ import * as taskController from "../controllers/task.controller.js";
 import express from "express";
 import { createTaskValidator,updateTaskValidator,handleValidationErrors } from "../middleware/Validators.js";
 import { protect } from "./../middleware/protect.js";
+import { restrictTo } from "../middleware/restrictTo.js";
 
 const router = express.Router();
 
@@ -14,6 +15,6 @@ router.route("/")
 router.route("/:id")
         .get(taskController.getTaskById)
         .patch(updateTaskValidator, handleValidationErrors, taskController.updateTask)
-        .delete(taskController.deleteTask)
+        .delete(restrictTo("OWNER"), taskController.deleteTask)
 
 export default router;
