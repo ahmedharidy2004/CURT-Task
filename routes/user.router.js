@@ -1,13 +1,13 @@
 import * as userController from "./../controllers/user.controller.js";
 import express from "express";
-import { createUserValidator,handleValidationErrors } from "../middleware/Validators.js";
+import { protect } from "./../middleware/protect.js";
 
 const router = express.Router();
 
 router.route("/")
-        .get(userController.getAllUsers)
+        .get(protect, userController.getAllUsers)
 
 router.route("/:id")
-        .get(userController.getUserById);
+        .get(protect, userController.getUserById);
 
 export default router;

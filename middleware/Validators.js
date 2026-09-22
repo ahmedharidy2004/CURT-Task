@@ -102,9 +102,6 @@ export const createProjectValidator = [
         .notEmpty()
         .withMessage("Description is required"),
 
-    validateUuid("ownerId", "Owner ID")
-        .notEmpty()
-        .withMessage("Owner ID is required")
 ];
 
 export const updateProjectValidator = [
@@ -120,11 +117,6 @@ export const updateProjectValidator = [
         .notEmpty()
         .withMessage("Description cannot be empty"),
 
-    body("ownerId")
-        .optional()
-        .trim()
-        .isUUID()
-        .withMessage("Owner ID must be a valid UUID")
 ];
 
 //////////////////////////// Task Validators ///////////////////////

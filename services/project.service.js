@@ -15,51 +15,101 @@ const projectSelect = {
     updatedAt: true
 }
 
-export const getAllProjects = async () => {
-    const projects = await prisma.project.findMany({
-        select: projectSelect
-    })
+const accessCondition = (userId) => ({
+    OR: [
+        { ownerId: userId },
+        {
+            projectMembers: {
+                some: { userId }
+            }
+        }
+    ]
+});
 
-    return projects;
+export const getAllProjects = async (userId, page, limit) => {
+    const skip = (page - 1) * limit;
+    const [projects, total] = await prisma.$transaction([
+        prisma.project.findMany({
+            where: accessCondition(userId),
+            skip,
+            take: limit,
+            orderBy: {
+                createdAt: "desc"
+            },
+            select: projectSelect
+        }),
+
+        prisma.project.count({
+            where: accessCondition(userId)
+        })
+    ])
+
+    return {
+        projects,
+        pagination: {
+            page,
+            limit,
+            total,
+            totalPages: Math.ceil(total / limit)
+        }
+    };
 }
 
-export const getProjectById = async (projectId) => {
-    const project = await prisma.project.findUnique({
+export const getProjectById = async (projectId, userId) => {
+    const project = await prisma.project.findFirst({
         where: {
-            id: projectId
+            id: projectId,
+            ...accessCondition(userId)
         },
         select: projectSelect
     })
 
     if(!project)
-        throw new AppError("Project Not Found!", 404);
+        throw new AppError("You do not have access to this project", 403);
 
     return project;
 }
 
-export const createProject = async(body) => {
+export const createProject = async(body, ownerId) => {
     try{
         const createdProject = await prisma.project.create({
-            data: body,
+            data: {
+                name: body.name,
+                description: body.description,
+                ownerId
+            },
             select: projectSelect
         });
 
         return createdProject;
     } catch(err) {
         if(err.code == "P2003")
-            throw new AppError(`The owner with the id: ${body.ownerId} does not exist`, 404);
+            throw new AppError(`The owner with the id: ${ownerId} does not exist`, 404);
 
         throw err;
     }
 }
 
-export const updateProject = async(projectId, body) => {
+export const updateProject = async(projectId, body, ownerId) => {
     try {
+        const project = await prisma.project.findFirst({
+            where: {
+                id: projectId,
+                ownerId
+            }
+        });
+
+        if(!project)
+            throw new AppError("You do not have permission to modify this project", 403);
+
         const updatedProject = await prisma.project.update({
             where: {
                 id: projectId
             },
-            data: body,
+            data: {
+                name: body.name,
+                description: body.description
+            },
             select: projectSelect
         })
 
@@ -69,15 +119,22 @@ export const updateProject = async(projectId, body) => {
             throw new AppError("Project Not Found", 404);
         }
 
-        if(err.code == "P2003")
-            throw new AppError(`The owner with the id: ${body.ownerId} does not exist`, 404);
-
         throw err;
     }
 }
 
-export const deleteProject = async(projectId) => {
+export const deleteProject = async(projectId, ownerId) => {
     try {
+        const project = await prisma.project.findFirst({
+            where: {
+                id: projectId,
+                ownerId
+            }
+        });
+
+        if(!project)
+            throw new AppError("You do not have permission to delete this project", 403);
+
         await prisma.project.delete({
             where: {
                 id: projectId

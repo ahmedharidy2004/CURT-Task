@@ -1,8 +1,11 @@
 import * as projectController from "../controllers/project.controller.js";
 import express from "express";
 import { createProjectValidator,updateProjectValidator,handleValidationErrors } from "../middleware/Validators.js";
+import { protect } from "./../middleware/protect.js";
 
 const router = express.Router();
+
+router.use(protect);
 
 router.route("/")
         .get(projectController.getAllProjects)

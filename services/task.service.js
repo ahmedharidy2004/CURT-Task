@@ -23,31 +23,102 @@ const taskSelect = {
     updatedAt: true
 }
 
-export const getAllTasks = async () => {
-    const tasks = await prisma.task.findMany({
-        select: taskSelect
-    })
+const projectAccessCondition = (userId) => ({
+    OR: [
+        { ownerId: userId },
+        {
+            projectMembers: {
+                some: { userId }
+            }
+        }
+    ]
+});
 
-    return tasks;
+
+const getAccessibleProject = async (projectId, userId) => {
+    const project = await prisma.project.findFirst({
+        where: {
+            id: projectId,
+            ...projectAccessCondition(userId)
+        },
+        select: {
+            ownerId: true,
+            projectMembers: {
+                select: { userId: true }
+            }
+        }
+    });
+
+    if(!project)
+        throw new AppError("You do not have access to this project", 403);
+
+    return project;
+};
+
+const validateAssignedMember = async (project, assignedTo) => {
+
+    const isProjectMember = project.projectMembers.some(
+        (member) => member.userId === assignedTo
+    );
+
+    if(project.ownerId !== assignedTo && !isProjectMember)
+        throw new AppError("Assigned user is not a member of this project", 403);
+};
+
+export const getAllTasks = async (userId, page, limit) => {
+    const skip = (page - 1) * limit;
+
+    const [tasks, total] = await prisma.$transaction([
+        prisma.task.findMany({
+            where: {
+                project: projectAccessCondition(userId)
+            },
+            skip,
+            take: limit,
+            orderBy: {
+                createdAt: "desc"
+            },
+            select: taskSelect
+        }),
+
+        prisma.task.count({
+            where: {
+                project: projectAccessCondition(userId)
+            }
+        })
+    ])
+
+    return {
+        tasks,
+        pagination: {
+            page,
+            limit,
+            total,
+            totalPages: Math.ceil(total / limit)
+        }
+    };
 }
 
-export const getTaskById = async (taskId) => {
-    const task = await prisma.task.findUnique({
+export const getTaskById = async (taskId, userId) => {
+    const task = await prisma.task.findFirst({
         where: {
-            id: taskId
+            id: taskId,
+            project: projectAccessCondition(userId)
         },
         select: taskSelect
     });
 
     if(!task)
-        throw new AppError("Task Not Found!", 404);
+        throw new AppError("You do not have access to this task", 403);
 
     return task;
 }
 
-export const createTask = async (body) => {
+export const createTask = async (body, userId) => {
     try {
         const { title, description, priority, status, assignedTo, projectId } = body;
+        const project = await getAccessibleProject(projectId, userId);
+        await validateAssignedMember(project, assignedTo);
 
         const createdTask = await prisma.task.create({
             data: {
@@ -71,9 +142,25 @@ export const createTask = async (body) => {
     }
 }
 
-export const updateTask = async (taskId, body) => {
+export const updateTask = async (taskId, body, userId) => {
     try {
         const { title, description, priority, status, assignedTo, projectId } = body;
+
+        const existingTask = await prisma.task.findFirst({
+            where: {
+                id: taskId,
+                project: projectAccessCondition(userId)
+            },
+            select: { projectId: true, assignedTo: true }
+        });
+
+        if(!existingTask)
+            throw new AppError("You do not have access to this task", 403);
+
+        const targetProjectId = projectId ?? existingTask.projectId;
+        const project = await getAccessibleProject(targetProjectId, userId);
+        await validateAssignedMember(project, assignedTo ?? existingTask.assignedTo);
+
         const updatedTask = await prisma.task.update({
             where : {
                 id: taskId
@@ -101,8 +188,20 @@ export const updateTask = async (taskId, body) => {
     }
 }
 
-export const deleteTask = async (taskId) => {
+export const deleteTask = async (taskId, userId) => {
     try {
+        const task = await prisma.task.findFirst({
+            where: {
+                id: taskId,
+                project: {
+                    ownerId: userId
+                }
+            }
+        });
+
+        if(!task)
+            throw new AppError("You do not have permission to delete this task", 403);
+
         await prisma.task.delete({
             where : {
                 id: taskId
