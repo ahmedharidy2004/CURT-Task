@@ -1,3 +1,5 @@
+import "dotenv/config";
+
 const swaggerDocument = {
     openapi: "3.0.3",
     info: {
@@ -7,8 +9,8 @@ const swaggerDocument = {
     },
     servers: [
         {
-            url: "http://localhost:3000",
-            description: "Local development server"
+            url: process.env.API_URL || "http://localhost:3000",
+            description: process.env.API_URL ? "Deployed API server" : "Local development server"
         }
     ],
     tags: [
