@@ -34,7 +34,6 @@ const projectAccessCondition = (userId) => ({
     ]
 });
 
-
 const getAccessibleProject = async (projectId, userId) => {
     const project = await prisma.project.findFirst({
         where: {
@@ -55,6 +54,7 @@ const getAccessibleProject = async (projectId, userId) => {
     return project;
 };
 
+// validation for membership of user in specific project
 const validateAssignedMember = async (project, assignedTo) => {
 
     const isProjectMember = project.projectMembers.some(

@@ -35,6 +35,7 @@ export const createUserValidator = [
 
     body("email")
         .trim()
+        .normalizeEmail()
         .notEmpty()
         .withMessage("Email is required")
         .isEmail()
@@ -64,6 +65,7 @@ export const updateUserValidator = [
     body("email")
         .optional()
         .trim()
+        .normalizeEmail()
         .isEmail()
         .withMessage("Invalid email"),
 
@@ -77,6 +79,7 @@ export const updateUserValidator = [
 export const loginValidator = [
     body("email")
         .trim()
+        .normalizeEmail()
         .notEmpty()
         .withMessage("Email is required")
         .isEmail()
