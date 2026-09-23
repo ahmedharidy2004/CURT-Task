@@ -69,11 +69,31 @@ const validateAssignedMember = async (project, assignedTo) => {
 export const getAllTasks = async (userId, page, limit, filter = {}) => {
 
     const taskWhere = {
-        project: projectAccessCondition(userId),
-        status: filter.status,
-        priority: filter.priority,
-        assignedTo: filter.assignedTo,
-        projectId: filter.projectId
+        AND: [
+            {
+                OR: [
+                    {
+                        project: {
+                            ownerId: userId
+                        }
+                    },
+                    {
+                        assignedTo: userId,
+                        project: {
+                            projectMembers: {
+                                some: { userId }
+                            }
+                        }
+                    }
+                ]
+            },
+            {
+                status: filter.status,
+                priority: filter.priority,
+                assignedTo: filter.assignedTo,
+                projectId: filter.projectId
+            }
+        ]
     }
 
     const skip = (page - 1) * limit;
