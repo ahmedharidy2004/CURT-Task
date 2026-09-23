@@ -86,3 +86,18 @@ export const removeProjectMember = catchAsync(async(req, res) => {
         }
     })
 })
+
+export const setRole = catchAsync(async(req, res) => {
+    const user = await projectService.setRole(
+        req.params.id,
+        req.user.id,
+        req.params.memberId
+    );
+
+    res.status(200).json({
+        status: "success",
+        data: {
+            user
+        }
+    })
+})

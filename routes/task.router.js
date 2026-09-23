@@ -1,6 +1,6 @@
 import * as taskController from "../controllers/task.controller.js";
 import express from "express";
-import { createTaskValidator,updateTaskValidator,handleValidationErrors } from "../middleware/Validators.js";
+import { createTaskValidator,updateTaskValidator,updateTaskStatusValidator,handleValidationErrors } from "../middleware/Validators.js";
 import { protect } from "./../middleware/protect.js";
 import { restrictTo } from "../middleware/restrictTo.js";
 
@@ -10,11 +10,18 @@ router.use(protect);
 
 router.route("/")
         .get(taskController.getAllTasks)
-        .post(createTaskValidator, handleValidationErrors, taskController.createTask)
+        .post(restrictTo("OWNER"),createTaskValidator, handleValidationErrors, taskController.createTask)
 
 router.route("/:id")
         .get(taskController.getTaskById)
-        .patch(updateTaskValidator, handleValidationErrors, taskController.updateTask)
+        .patch(restrictTo("OWNER"),updateTaskValidator, handleValidationErrors, taskController.updateTask)
         .delete(restrictTo("OWNER"), taskController.deleteTask)
+
+router.patch(
+        "/:id/status",
+        updateTaskStatusValidator,
+        handleValidationErrors,
+        taskController.updateTaskStatus
+)
 
 export default router;

@@ -23,4 +23,7 @@ router.route("/:id/members")
 router.route("/:id/members/:memberId")
         .delete(restrictTo("OWNER"), projectController.removeProjectMember)
 
+router.route("/:id/members/:memberId/role")
+        .patch(restrictTo("OWNER"), projectController.setRole)
+
 export default router;

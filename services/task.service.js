@@ -65,6 +65,7 @@ const validateAssignedMember = async (project, assignedTo) => {
         throw new AppError("Assigned user is not a member of this project", 403);
 };
 
+/////////////////////////////////////////////////////////////////////////////////
 export const getAllTasks = async (userId, page, limit, filter = {}) => {
 
     const taskWhere = {
@@ -104,6 +105,7 @@ export const getAllTasks = async (userId, page, limit, filter = {}) => {
     };
 }
 
+/////////////////////////////////////////////////////////////////////////////////
 export const getTaskById = async (taskId, userId) => {
     const task = await prisma.task.findFirst({
         where: {
@@ -147,6 +149,7 @@ export const createTask = async (body, userId) => {
     }
 }
 
+/////////////////////////////////////////////////////////////////////////////////
 export const updateTask = async (taskId, body, userId) => {
     try {
         const { title, description, priority, status, assignedTo, projectId } = body;
@@ -193,6 +196,31 @@ export const updateTask = async (taskId, body, userId) => {
     }
 }
 
+/////////////////////////////////////////////////////////////////////////////////
+export const updateTaskStatus = async (taskId, status, userId) => {
+    const task = await prisma.task.findFirst({
+        where: {
+            id: taskId,
+            assignedTo: userId,
+            project: {
+                projectMembers: {
+                    some: { userId }
+                }
+            }
+        }
+    });
+
+    if(!task)
+        throw new AppError("You can only update the status of a task assigned to you", 403);
+
+    return prisma.task.update({
+        where: { id: taskId },
+        data: { status },
+        select: taskSelect
+    });
+}
+
+/////////////////////////////////////////////////////////////////////////////////
 export const deleteTask = async (taskId, userId) => {
     try {
         const task = await prisma.task.findFirst({

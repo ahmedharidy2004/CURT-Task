@@ -17,8 +17,12 @@
   "scripts": {
     "dev": "nodemon --exec tsx server.js",
     "start": "nodemon server.js",
+    "seed": "node prisma/seeder.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "postinstall": "prisma skills sync || exit 0"
+  },
+  "prisma": {
+    "seed": "node prisma/seeder.js"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.10.0",
@@ -27,8 +31,10 @@
     "cors": "^2.8.6",
     "dotenv": "^18.0.1",
     "express": "^5.2.1",
+    "express-rate-limit": "^8.7.0",
     "express-validator": "^7.3.2",
     "jsonwebtoken": "^9.0.3",
+    "morgan": "^1.12.1",
     "nodemon": "^3.1.14",
     "pg": "^8.23.0"
   },

@@ -181,3 +181,9 @@ export const updateTaskValidator = [
         .isUUID()
         .withMessage("Project ID must be a valid UUID")
 ];
+
+export const updateTaskStatusValidator = [
+    body("status")
+        .isIn(["TODO", "IN_PROGRESS", "DONE"])
+        .withMessage("Status must be TODO, IN_PROGRESS, or DONE")
+];

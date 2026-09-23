@@ -1,6 +1,7 @@
 import { prisma } from '../lib/prisma.ts'
 import AppError from './../utils/appError.js'
 
+// project selection fields
 const projectSelect = {
     id: true,
     name: true,
@@ -15,6 +16,7 @@ const projectSelect = {
     updatedAt: true
 }
 
+// check if this user is owner or member of project
 const accessCondition = (userId) => ({
     OR: [
         { ownerId: userId },
@@ -26,11 +28,13 @@ const accessCondition = (userId) => ({
     ]
 });
 
+/////////////////////////////////////////////////////////////////////////////////
 export const getAllProjects = async (userId, page, limit, filter = {}) => {
     const skip = (page - 1) * limit;
 
     const projectWhere = accessCondition(userId);
 
+    // applying name filter
     if (filter.name) {
         projectWhere.name = {
             contains: filter.name,
@@ -65,6 +69,7 @@ export const getAllProjects = async (userId, page, limit, filter = {}) => {
     };
 }
 
+/////////////////////////////////////////////////////////////////////////////////
 export const getProjectById = async (projectId, userId) => {
     const project = await prisma.project.findFirst({
         where: {
@@ -74,12 +79,14 @@ export const getProjectById = async (projectId, userId) => {
         select: projectSelect
     })
 
+    // if the user is not member/owner of this project, then throw an errorr
     if(!project)
         throw new AppError("You do not have access to this project", 403);
 
     return project;
 }
 
+/////////////////////////////////////////////////////////////////////////////////
 export const createProject = async(body, ownerId) => {
     try{
         const createdProject = await prisma.project.create({
@@ -100,6 +107,7 @@ export const createProject = async(body, ownerId) => {
     }
 }
 
+/////////////////////////////////////////////////////////////////////////////////
 export const updateProject = async(projectId, body, ownerId) => {
     try {
         const project = await prisma.project.findFirst({
@@ -133,6 +141,7 @@ export const updateProject = async(projectId, body, ownerId) => {
     }
 }
 
+/////////////////////////////////////////////////////////////////////////////////
 export const deleteProject = async(projectId, ownerId) => {
     try {
         const project = await prisma.project.findFirst({
@@ -160,6 +169,7 @@ export const deleteProject = async(projectId, ownerId) => {
     }
 }
 
+/////////////////////////////////////////////////////////////////////////////////
 export const addProjectMember = async (projectId, ownerId, memberId) => {
     const project = await prisma.project.findUnique({
         where: { id: projectId },
@@ -170,6 +180,7 @@ export const addProjectMember = async (projectId, ownerId, memberId) => {
         throw new AppError("No project found with that Id", 404);
     }
 
+    // the owner given is the not the owner of the project 
     if (project.ownerId !== ownerId) {
         throw new AppError("You can't do this action", 403);
     }
@@ -207,6 +218,7 @@ export const addProjectMember = async (projectId, ownerId, memberId) => {
 
         return addedMember;
     } catch (err) {
+        // if the user already exists in the project, catch its error
         if (err.code === "P2002") {
             throw new AppError("User is already a member of this project", 409);
         }
@@ -215,6 +227,7 @@ export const addProjectMember = async (projectId, ownerId, memberId) => {
     }
 }
 
+/////////////////////////////////////////////////////////////////////////////////
 export const removeProjectMember = async (projectId, ownerId, memberId) => {
     const project = await prisma.project.findUnique({
         where: { id: projectId },
@@ -261,3 +274,44 @@ export const removeProjectMember = async (projectId, ownerId, memberId) => {
         removed: true
     };
 }
+
+/////////////////////////////////////////////////////////////////////////////////
+export const setRole = async (projectId, ownerId, memberId) => {
+    const project = await prisma.project.findUnique({
+        where: { id: projectId },
+        select: { ownerId: true }
+    });
+
+    if (!project) {
+        throw new AppError("No project found with that Id", 404);
+    }
+
+    if (project.ownerId !== ownerId) {
+        throw new AppError("Only the project owner can change member roles", 403);
+    }
+
+    const membership = await prisma.projectMember.findUnique({
+        where: {
+            projectId_userId: {
+                projectId,
+                userId: memberId
+            }
+        }
+    });
+
+    if (!membership) {
+        throw new AppError("User is not a member of this project", 404);
+    }
+
+    return prisma.user.update({
+        where: { id: memberId },
+        data: { role: "OWNER" },
+        select: {
+            id: true,
+            name: true,
+            username: true,
+            email: true,
+            role: true
+        }
+    });
+};

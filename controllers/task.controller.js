@@ -60,6 +60,21 @@ export const updateTask = catchAsync(async(req, res) => {
     })
 })
 
+export const updateTaskStatus = catchAsync(async(req, res) => {
+    const updatedTask = await taskService.updateTaskStatus(
+        req.params.id,
+        req.body.status,
+        req.user.id
+    );
+
+    res.status(200).json({
+        status: "success",
+        data: {
+            updatedTask
+        }
+    })
+})
+
 export const deleteTask = catchAsync(async(req, res) => {
     await taskService.deleteTask(req.params.id, req.user.id);
 

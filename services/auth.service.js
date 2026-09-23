@@ -26,6 +26,7 @@ export const signUp = async(body) => {
             select: userSelect
         });
 
+        // generating token
         const token = jwt.sign(
             { userId: createdUser.id },
             process.env.JWT_SECRET,
@@ -44,6 +45,7 @@ export const signUp = async(body) => {
         };
 
     } catch(err) {
+        // in case that the username or email exists catch the prisma error code and throw it
         if (err.code === "P2002")
             throw new AppError("This username or email already exists", 400);
 
@@ -53,15 +55,19 @@ export const signUp = async(body) => {
 
 export const login = async(body) => {
     const { email, password } = body;
+
+    // checking if user with this email exists
     const user = await prisma.user.findUnique({
         where: {
             email
         }
     });
 
+    // user not found
     if(!user) 
         throw new AppError("Invalid Email or Password", 401);
 
+    // checking if passwords are matched.
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if(!isPasswordValid) 
         throw new AppError("Invalid Email or Password", 401);
