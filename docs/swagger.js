@@ -113,21 +113,58 @@ const swaggerDocument = {
                 }
             }
         },
-        "/users": {
+        "/users/me": {
             get: {
                 tags: ["Users"],
-                summary: "List users",
+                summary: "Get the authenticated user's profile",
                 security: [{ bearerAuth: [] }],
-                responses: { 200: { description: "Users retrieved" }, 401: { description: "Authentication required" } }
+                responses: { 200: { description: "Profile retrieved" }, 401: { description: "Authentication required" } }
+            },
+            patch: {
+                tags: ["Users"],
+                summary: "Update the authenticated user's profile",
+                security: [{ bearerAuth: [] }],
+                requestBody: {
+                    required: true,
+                    content: {
+                        "application/json": {
+                            schema: {
+                                type: "object",
+                                properties: {
+                                    name: { type: "string", example: "Ahmed Haridy" },
+                                    username: { type: "string", example: "ahmed_owner" },
+                                    email: { type: "string", format: "email", example: "ahmed@example.com" }
+                                },
+                                additionalProperties: false
+                            }
+                        }
+                    }
+                },
+                responses: { 200: { description: "Profile updated" }, 400: { description: "Duplicate username or email" }, 401: { description: "Authentication required" } }
             }
         },
-        "/users/{id}": {
-            get: {
+        "/users/updatePassword": {
+            patch: {
                 tags: ["Users"],
-                summary: "Get a user by ID",
+                summary: "Update the authenticated user's password",
                 security: [{ bearerAuth: [] }],
-                parameters: [{ $ref: "#/components/parameters/id" }],
-                responses: { 200: { description: "User retrieved" }, 401: { description: "Authentication required" }, 404: { description: "User not found" } }
+                requestBody: {
+                    required: true,
+                    content: {
+                        "application/json": {
+                            schema: {
+                                type: "object",
+                                required: ["currentPassword", "newPassword"],
+                                properties: {
+                                    currentPassword: { type: "string", format: "password", example: "Password123!" },
+                                    newPassword: { type: "string", format: "password", minLength: 8, example: "NewPassword123!" }
+                                },
+                                additionalProperties: false
+                            }
+                        }
+                    }
+                },
+                responses: { 200: { description: "Password updated" }, 400: { description: "Current password is invalid" }, 401: { description: "Authentication required" } }
             }
         },
         "/projects": {

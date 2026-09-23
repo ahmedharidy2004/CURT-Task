@@ -4,10 +4,13 @@ import { protect } from "./../middleware/protect.js";
 
 const router = express.Router();
 
-router.route("/")
-        .get(protect, userController.getAllUsers)
+// router.route("/")
+//         .get(protect, userController.getAllUsers)
 
-router.route("/:id")
-        .get(protect, userController.getUserById);
+router.route("/me")
+        .get(protect, userController.getUserById)
+        .patch(protect, userController.updateProfile);
+
+router.route("/updatePassword").patch(protect, userController.updatePassword);
 
 export default router;
