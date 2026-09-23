@@ -16,10 +16,11 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon --exec tsx server.js",
-    "start": "nodemon server.js",
+    "build": "prisma generate",
+    "start": "node server.js",
     "seed": "node prisma/seeder.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "postinstall": "prisma skills sync || exit 0"
+    "postinstall": "prisma generate"
   },
   "prisma": {
     "seed": "node prisma/seeder.js"
