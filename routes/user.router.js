@@ -8,7 +8,7 @@ const router = express.Router();
 //         .get(protect, userController.getAllUsers)
 
 router.route("/me")
-        .get(protect, userController.getUserById)
+        .get(protect, userController.getUser)
         .patch(protect, userController.updateProfile);
 
 router.route("/updatePassword").patch(protect, userController.updatePassword);

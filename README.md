@@ -58,8 +58,8 @@ CURT lets teams organize work through **Projects** and **Tasks**:
 ```
 curt-task-management/
 ├── prisma/
-│   ├── schema.prisma          # Database schema
-│   ├── seeder.js              # Seed script
+│   ├── schema.prisma          # Database schema & models
+│   ├── seeder.js              # Seed script (1 owner + 4 members)
 │   └── migrations/            # Prisma migration history
 ├── lib/
 │   └── prisma.ts              # PrismaClient singleton with PrismaPg adapter
@@ -80,13 +80,18 @@ curt-task-management/
 │   ├── user.service.js
 │   ├── project.service.js
 │   └── task.service.js
-├── middlewares/
-│   ├── auth.middleware.js      # JWT verification & role guard
-│   └── validation.middleware.js
+├── middleware/
+│   ├── protect.js             # JWT verification
+│   ├── restrictTo.js          # Role-based access guard
+│   ├── rateLimiter.js         # Rate limiting for auth routes
+│   └── Validators.js          # express-validator rules
 ├── utils/
+│   ├── appError.js            # Custom AppError class
+│   ├── catchAsync.js          # Async error wrapper
 │   └── errorHandler.js        # Global error-handling middleware
 ├── app.js                     # Express app configuration
 ├── server.js                  # Server entry point
+├── prisma.config.ts           # Prisma configuration
 ├── .env.example
 └── package.json
 ```

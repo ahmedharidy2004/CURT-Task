@@ -13,8 +13,8 @@ import catchAsync from "./../utils/catchAsync.js";
 //     });
 // })
 
-export const getUserById = catchAsync(async (req, res) => {
-    const user = await userService.getUserById(req.user.id);
+export const getUser = catchAsync(async (req, res) => {
+    const user = await userService.getUser(req.user.id);
 
     res.status(200).json({
         status: "success",
